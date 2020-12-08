@@ -1,0 +1,90 @@
+#include <iostream>
+
+int main()
+{
+	FILE*outputT;    //----write output temperature
+	double length;
+	double TL, TR;
+	double den, c, k; //---density
+	double s;
+	double dt;
+	int n;
+	int i;
+	int tstep;
+	int maxtstep;
+
+	//----------define physical parameters
+	double dx;
+	double T0[101], T[101];
+	double ae0[101], ae1[101], aw0[101], aw1[101], ap0[101], ap1[101], b[101]; //-----mesh number 101, mesh number increase, dt must decrease
+
+	//-----------define varation parameters by physical parameter
+
+
+
+
+	length = 3;
+	TL = 3;
+	TR = 5;
+	den = 100;
+	c = 1000;
+	k = 10;
+	s = 10;
+	dt = 100;
+	n = 3;
+	maxtstep = 10000;
+		//----------define value to physical parameter
+
+	dx = length / n;
+
+	for (i = 2; i < n; i++)
+	{
+		ae0[i] = k / dx;
+		aw0[i] = k / dx;
+		ap0[i] = den * c * dx / dt - ae0[i] - aw0[i];
+		ap1[i] = ap0[i] + ae0[i] + aw0[i];
+		b[i] = s * dx;
+	}
+	i = 1;
+	ae0[i] = k / dx;
+	aw0[i] = k / (dx / 2);
+	ap0[i] = den * c * dx / dt - ae0[i] - aw0[i];
+	ap1[i] = ap0[i] + ae0[i] + aw0[i];
+	b[i] = s * dx;
+	i = n;
+	ae0[i] = k / (dx / 2);
+	aw0[i] = k / dx;
+	ap0[i] = den * c * dx / dt - ae0[i] - aw0[i];
+	ap1[i] = ap0[i] + ae0[i] + aw0[i];
+	b[i] = s * dx;
+
+	//-------solve equations--i=2 mid control volume, i=1 first volume, i=n, last volume
+
+	for (i = 1; i <= n; i++)
+	{
+		T0[i] = 3;    //initial conditions
+	}
+	T0[0] = TL;
+	T0[n + 1] = TR; //boundary conditions
+
+
+	outputT = fopen("test.txt", "w+"); //fopen error-project-properties-configuration properties-c++-preprocessor-definitions-add ;_CRT_SECURE_NO_WARNINGS
+
+	for (tstep = 1; tstep <= maxtstep; tstep++)
+	{
+		fprintf(outputT,"%i  ", tstep);               //printf("%i  ", tstep);
+		for (i = 1; i <= n; i++)
+		{
+			T[i] = (ae0[i] * T0[i + 1] + aw0[i] * T0[i - 1] + ap0[i] * T0[i] + b[i]) / ap1[i];
+			fprintf(outputT,"%e  ", T[i]);                     //printf("%e  ", T[i])
+		}
+		fprintf(outputT, "\n"); //------printf("\n")
+		for (i = 1; i <= n; i++)
+		{
+			T0[i] = T[i]; //-------put the first calculated value as the initial value to the second mesh
+		}
+	}
+
+	fclose(outputT);
+	return 0;
+}
